@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <body style="margin:0;height:100vh;background-color:#000;">
+    <div id="player"></div>
+
+    <script>
+      var videoId;
+      var player;
+
+      window.onGapiReady = function() {
+        gapi.client.setApiKey('');
+        var restRequest = gapi.client.request({
+          path: 'youtube/v3/search',
+          params: {
+            channelId: 'UCI3DTtB-a3fJPjKtQ5kYHfA', // gamesdonequick
+            part: 'snippet',
+            type: 'video',
+            videoEmbeddable: true,
+            maxResults: 50
+          }
+        });
+
+        restRequest.execute(function(resp) {
+          var index = parseInt(Math.random() * 50);
+          if (resp.items && resp.items[index]) {
+            videoId = resp.items[index].id.videoId;
+            playVideo();
+          }
+        });
+      }
+
+      window.onYouTubeIframeAPIReady = function() {
+        player = new YT.Player('player', {
+          height: '100%',
+          width: '100%',
+          playerVars: {
+            controls: 0,
+            iv_load_policy: 3,
+            loop: 1,
+            modestbranding: 1,
+            rel: 0,
+            showinfo: 0
+          },
+          events: {
+            onReady: playVideo
+          }
+        });
+      }
+
+      function playVideo() {
+        if (player && videoId) {
+          player.loadVideoById({videoId: videoId, startSeconds: 240, suggestedQuality: 'hd1080'});
+          player.mute();
+          player.playVideo();
+        }
+      }
+
+      var tag = document.createElement('script');
+      tag.src = '//www.youtube.com/iframe_api?onload=onYouTubeIframeAPIReady';
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      tag = document.createElement('script');
+      tag.src = '//apis.google.com/js/client.js?onload=onGapiReady';
+      firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    </script>
+  </body>
+</html>
