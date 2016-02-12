@@ -4,15 +4,17 @@
     <div id="player"></div>
 
     <script>
-      var videoId;
-      var player;
+      var videoId, player;
 
       window.onGapiReady = function() {
+        var keywordList = ['agdq', 'tasvideos']; // 'speedrun'
+        var keyword = keywordList[parseInt(Math.random() * keywordList.length)];
+
         gapi.client.setApiKey('AIzaSyBo3T4qX9vqrQLA5TQ6Y9kaW5guW6aEDTE');
         var restRequest = gapi.client.request({
           path: 'youtube/v3/search',
           params: {
-            channelId: 'UCI3DTtB-a3fJPjKtQ5kYHfA', // gamesdonequick
+            q: keyword,
             part: 'snippet',
             type: 'video',
             videoEmbeddable: true,
