@@ -7,21 +7,20 @@
     <div id="player"></div>
 
     <script>
-      var videoIds = [], player = null;
-
-      function onError() {
-        player.nextVideo();
-      }
+      var videoIds = [], player = null, isPlayerReady = false;
 
       function playVideo() {
-        if (player && videoIds.length > 0) {
-          player.loadPlaylist(videoIds, 240, 'hd1080');
+        if (isPlayerReady && videoIds.length > 0) {
+          console.debug('Starting.', player, videoIds);
+          player.loadPlaylist(videoIds, 0, 180, 'hd1080');
+          // player.loadVideoById(videoIds[0], 180, 'hd1080');
           player.mute();
           player.playVideo();
-        }
+        } else { console.warn('Somebody\'s not ready yet.'); }
       }
 
       window.onGapiReady = function() {
+        console.debug('Gapi ready.');
         var keywordList = ['agdq', 'tasvideos']; // 'speedrun'
         var keyword = keywordList[parseInt(Math.random() * keywordList.length)];
 
@@ -39,6 +38,7 @@
 
         restRequest.execute(function(resp) {
           if (resp.items) {
+            console.debug('Received search results.');
             for (var i = 0; i < 5; i++) {
               var index = parseInt(Math.random() * 50);
               videoIds.push(resp.items[index].id.videoId);
@@ -49,6 +49,7 @@
       }
 
       window.onYouTubeIframeAPIReady = function() {
+        console.debug('YouTubeIframeAPI ready.');
         player = new YT.Player('player', {
           height: '100%',
           width: '100%',
@@ -61,8 +62,24 @@
             showinfo: 0
           },
           events: {
-            onReady: playVideo,
-            onError: onError
+            onReady: function () {
+              console.debug('YouTube player ready.');
+              isPlayerReady = true;
+              playVideo();
+            },
+            onError: function (error) {
+              console.error(error);
+              // if (isPlayerReady) {
+              //   player.nextVideo();
+              // }
+            },
+            onStateChange: function (event) {
+              console.debug('State changed: ', event.data);
+              if (event.data === YT.PlayerState.ENDED) {
+                player.nextVideo();
+                player.seekTo(180, true);
+              }
+            }
           }
         });
       }
