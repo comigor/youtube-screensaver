@@ -7,7 +7,19 @@
     <div id="player"></div>
 
     <script>
-      var videoId, player;
+      var videoIds = [], player = null;
+
+      function onError() {
+        player.nextVideo();
+      }
+
+      function playVideo() {
+        if (player && videoIds.length > 0) {
+          player.loadPlaylist(videoIds, 240, 'hd1080');
+          player.mute();
+          player.playVideo();
+        }
+      }
 
       window.onGapiReady = function() {
         var keywordList = ['agdq', 'tasvideos']; // 'speedrun'
@@ -26,9 +38,11 @@
         });
 
         restRequest.execute(function(resp) {
-          var index = parseInt(Math.random() * 50);
-          if (resp.items && resp.items[index]) {
-            videoId = resp.items[index].id.videoId;
+          if (resp.items) {
+            for (var i = 0; i < 5; i++) {
+              var index = parseInt(Math.random() * 50);
+              videoIds.push(resp.items[index].id.videoId);
+            }
             playVideo();
           }
         });
@@ -39,7 +53,7 @@
           height: '100%',
           width: '100%',
           playerVars: {
-            controls: 0,
+            controls: 1,
             iv_load_policy: 3,
             loop: 1,
             modestbranding: 1,
@@ -47,21 +61,14 @@
             showinfo: 0
           },
           events: {
-            onReady: playVideo
+            onReady: playVideo,
+            onError: onError
           }
         });
       }
 
-      function playVideo() {
-        if (player && videoId) {
-          player.loadVideoById({videoId: videoId, startSeconds: 240, suggestedQuality: 'hd1080'});
-          player.mute();
-          player.playVideo();
-        }
-      }
-
       var tag = document.createElement('script');
-      tag.src = '//www.youtube.com/iframe_api?onload=onYouTubeIframeAPIReady';
+      tag.src = '//www.youtube.com/iframe_api';
       var firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
