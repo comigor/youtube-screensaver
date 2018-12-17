@@ -66,6 +66,7 @@
               console.debug('YouTube player ready.');
               isPlayerReady = true;
               playVideo();
+              setTimeout(playVideo, 5000); // just to be sure
             },
             onError: function (error) {
               console.error(error);
