@@ -1,99 +1,111 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-  <head>
-    <title>YouTube ScreenSaver</title>
-  </head>
-  <body style="margin:0;height:100vh;background-color:#000;">
-    <div id="player"></div>
+    <head>
+        <title>YouTube ScreenSaver</title>
+    </head>
+    <body style="margin: 0; height: 100vh; background-color: #000">
+        <div id="player"></div>
 
-    <script>
-      var videoIds = [], player = null, isPlayerReady = false;
+        <script>
+            var params = new URLSearchParams(window.location.search);
+            var apiKey = params.get("apikey") || "AIzaSyDB64REwVM-haGlcapcRMcPZOqgpY5G3Qc";
+            var keywordList = params.has("keywords")
+                ? params
+                      .get("keywords")
+                      .split(",")
+                      .map(function (k) {
+                          return k.trim();
+                      })
+                : ["agdq", "speedru"];
+            var seekTime = parseInt(params.get("seek")) || 0;
 
-      function playVideo() {
-        if (isPlayerReady && videoIds.length > 0) {
-          console.debug('Starting.', player, videoIds);
-          player.loadPlaylist(videoIds, 0, 180, 'hd1080');
-          // player.loadVideoById(videoIds[0], 180, 'hd1080');
-          player.mute();
-          player.playVideo();
-        } else { console.warn('Somebody\'s not ready yet.'); }
-      }
+            var videoIds = [],
+                player = null,
+                isPlayerReady = false;
 
-      window.onGapiReady = function() {
-        console.debug('Gapi ready.');
-        var keywordList = ['agdq 2019', 'agdq']; // 'speedrun'
-        var keyword = keywordList[parseInt(Math.random() * keywordList.length)];
-
-        gapi.client.setApiKey('AIzaSyBo3T4qX9vqrQLA5TQ6Y9kaW5guW6aEDTE');
-        var restRequest = gapi.client.request({
-          path: 'youtube/v3/search',
-          params: {
-            q: keyword,
-            part: 'snippet',
-            type: 'video',
-            videoEmbeddable: true,
-            maxResults: 50
-          }
-        });
-
-        restRequest.execute(function(resp) {
-          if (resp.items) {
-            console.debug('Received search results.');
-            for (var i = 0; i < 5; i++) {
-              var index = parseInt(Math.random() * 50);
-              videoIds.push(resp.items[index].id.videoId);
+            function playVideo() {
+                if (isPlayerReady && videoIds.length > 0) {
+                    console.debug("Starting.", player, videoIds);
+                    player.loadPlaylist(videoIds, 0, seekTime, "hd1080");
+                    player.mute();
+                    player.playVideo();
+                } else {
+                    console.warn("Somebody's not ready yet.");
+                }
             }
-            playVideo();
-          }
-        });
-      }
 
-      window.onYouTubeIframeAPIReady = function() {
-        console.debug('YouTubeIframeAPI ready.');
-        player = new YT.Player('player', {
-          height: '100%',
-          width: '100%',
-          playerVars: {
-            controls: 0,
-            iv_load_policy: 3,
-            loop: 1,
-            modestbranding: 1,
-            rel: 0,
-            showinfo: 0
-          },
-          events: {
-            onReady: function () {
-              console.debug('YouTube player ready.');
-              isPlayerReady = true;
-              playVideo();
-              setTimeout(playVideo, 5000); // just to be sure
-            },
-            onError: function (error) {
-              console.error(error);
-              // if (isPlayerReady) {
-              //   player.nextVideo();
-              // }
-            },
-            onStateChange: function (event) {
-              console.debug('State changed: ', event.data);
-              if (event.data === YT.PlayerState.ENDED) {
-                player.nextVideo();
-                player.seekTo(180, true);
-              }
-            }
-          }
-        });
-      }
+            window.onGapiReady = function () {
+                console.debug("Gapi ready.");
+                var keyword = keywordList[parseInt(Math.random() * keywordList.length)];
 
-      var tag = document.createElement('script');
-      tag.src = '//www.youtube.com/iframe_api';
-      var firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                gapi.client.setApiKey(apiKey);
+                var restRequest = gapi.client.request({
+                    path: "youtube/v3/search",
+                    params: {
+                        q: keyword,
+                        part: "snippet",
+                        type: "video",
+                        videoEmbeddable: true,
+                        maxResults: 50,
+                    },
+                });
 
-      tag = document.createElement('script');
-      tag.src = '//apis.google.com/js/client.js?onload=onGapiReady';
-      firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    </script>
-  </body>
+                restRequest.execute(function (resp) {
+                    if (resp.items && resp.items.length > 0) {
+                        console.debug("Received search results.");
+                        var count = Math.min(5, resp.items.length);
+                        for (var i = 0; i < count; i++) {
+                            var index = parseInt(Math.random() * resp.items.length);
+                            videoIds.push(resp.items[index].id.videoId);
+                        }
+                        playVideo();
+                    }
+                });
+            };
+
+            window.onYouTubeIframeAPIReady = function () {
+                console.debug("YouTubeIframeAPI ready.");
+                player = new YT.Player("player", {
+                    height: "100%",
+                    width: "100%",
+                    playerVars: {
+                        controls: 0,
+                        iv_load_policy: 3,
+                        loop: 1,
+                        modestbranding: 1,
+                        rel: 0,
+                        showinfo: 0,
+                    },
+                    events: {
+                        onReady: function () {
+                            console.debug("YouTube player ready.");
+                            isPlayerReady = true;
+                            playVideo();
+                            setTimeout(playVideo, 5000); // just to be sure
+                        },
+                        onError: function (error) {
+                            console.error(error);
+                        },
+                        onStateChange: function (event) {
+                            console.debug("State changed: ", event.data);
+                            if (event.data === YT.PlayerState.ENDED) {
+                                player.nextVideo();
+                                player.seekTo(seekTime, true);
+                            }
+                        },
+                    },
+                });
+            };
+
+            var tag = document.createElement("script");
+            tag.src = "//www.youtube.com/iframe_api";
+            var firstScriptTag = document.getElementsByTagName("script")[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+            tag = document.createElement("script");
+            tag.src = "//apis.google.com/js/client.js?onload=onGapiReady";
+            firstScriptTag = document.getElementsByTagName("script")[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        </script>
+    </body>
 </html>
