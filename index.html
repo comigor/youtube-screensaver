@@ -18,8 +18,9 @@
                       })
                 : ["agdq", "speedru"];
             var seekTime = parseInt(params.get("seek")) || 0;
+            var videoId = params.get("v");
 
-            var videoIds = [],
+            var videoIds = videoId ? [videoId] : [],
                 player = null,
                 isPlayerReady = false;
 
@@ -102,10 +103,12 @@
             var firstScriptTag = document.getElementsByTagName("script")[0];
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-            tag = document.createElement("script");
-            tag.src = "//apis.google.com/js/client.js?onload=onGapiReady";
-            firstScriptTag = document.getElementsByTagName("script")[0];
-            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+            if (!videoId) {
+                tag = document.createElement("script");
+                tag.src = "//apis.google.com/js/client.js?onload=onGapiReady";
+                firstScriptTag = document.getElementsByTagName("script")[0];
+                firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+            }
         </script>
     </body>
 </html>
