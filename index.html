@@ -27,7 +27,11 @@
             function playVideo() {
                 if (isPlayerReady && videoIds.length > 0) {
                     console.debug("Starting.", player, videoIds);
-                    player.loadPlaylist(videoIds, 0, seekTime, "hd1080");
+                    if (videoId) {
+                        player.loadVideoById(videoId, seekTime, "hd1080");
+                    } else {
+                        player.loadPlaylist(videoIds, 0, seekTime, "hd1080");
+                    }
                     player.mute();
                     player.playVideo();
                 } else {
@@ -90,8 +94,13 @@
                         onStateChange: function (event) {
                             console.debug("State changed: ", event.data);
                             if (event.data === YT.PlayerState.ENDED) {
-                                player.nextVideo();
-                                player.seekTo(seekTime, true);
+                                if (videoId) {
+                                    player.seekTo(seekTime, true);
+                                    player.playVideo();
+                                } else {
+                                    player.nextVideo();
+                                    player.seekTo(seekTime, true);
+                                }
                             }
                         },
                     },
